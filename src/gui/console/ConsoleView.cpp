@@ -1,5 +1,4 @@
 #include "ConsoleView.h"
-#include <iostream>
 #include "gui/interface/Keys.h"
 
 ConsoleView::ConsoleView():
@@ -76,10 +75,15 @@ void ConsoleView::NotifyPreviousCommandsChanged(ConsoleModel * sender)
 			tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
 			commandList.push_back(tempLabel);
 			AddComponent(tempLabel);
-
                         std::string tmpCommand = commands[i].Command;
-                        while ((tmpCommand.length() * PIXEL_WIDTH) >= Size.X/2) {
+                        int cnt = 1;
+                        while (tmpCommand.length() >= (Size.X / 2 / PIXEL_WIDTH * cnt)) {
                             currentY-=16;
+                            totalY+=16;
+                            cnt++;
+                        }
+
+                        while (tmpCommand.length() >= (Size.X / 2 / PIXEL_WIDTH)) {
                             tempLabel = new ui::Label(ui::Point(0, currentY),
                                                       ui::Point(Size.X/2, 16),
                                                       tmpCommand.substr(0, Size.X/2/PIXEL_WIDTH));
@@ -87,13 +91,9 @@ void ConsoleView::NotifyPreviousCommandsChanged(ConsoleModel * sender)
                             tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
                             commandList.push_back(tempLabel);
                             AddComponent(tempLabel);
-                            std::cout << tmpCommand.length()  << " " << Size.X/2/PIXEL_WIDTH << std::endl;
                             tmpCommand = tmpCommand.substr(Size.X/2/PIXEL_WIDTH + 1);
-                            std::cout << tmpCommand << std::endl;
-                            totalY+=16;
+                            currentY+=16;
                         }
-
-                        currentY+=totalY;
                         tempLabel = new ui::Label(ui::Point(0, currentY),
                                                   ui::Point(Size.X/2, 16),
                                                   tmpCommand);
