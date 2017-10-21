@@ -10,6 +10,8 @@
 #include "gui/interface/Textbox.h"
 #include "ConsoleCommand.h"
 
+#define PIXEL_WIDTH 6
+
 
 class ConsoleController;
 class ConsoleModel;

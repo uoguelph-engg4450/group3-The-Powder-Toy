@@ -1,4 +1,5 @@
 #include <stack>
+#include <iostream>
 #include "ConsoleController.h"
 
 ConsoleController::ConsoleController(ControllerCallback * callback, CommandInterface * commandInterface):
@@ -17,6 +18,7 @@ void ConsoleController::EvaluateCommand(std::string command)
 {
 	if(command.length())
 	{
+            std::cout << command << std::endl;
 		if (command.substr(0, 6) == "!load ")
 			CloseConsole();
 		int returnCode = commandInterface->Command(command);

@@ -1,4 +1,5 @@
 #include "ConsoleView.h"
+#include <iostream>
 #include "gui/interface/Keys.h"
 
 ConsoleView::ConsoleView():
@@ -63,29 +64,51 @@ void ConsoleView::NotifyPreviousCommandsChanged(ConsoleModel * sender)
 	commandList.clear();
 	std::deque<ConsoleCommand> commands = sender->GetPreviousCommands();
 	int currentY = Size.Y - 32;
+        int totalY = 0;
 	if(commands.size())
 		for(int i = commands.size()-1; i >= 0; i--)
 		{
+                    totalY = 0;
 			if(currentY <= 0)
 				break;
-			ui::Label * tempLabel = new ui::Label(ui::Point(Size.X/2, currentY), ui::Point(Size.X/2, 16), commands[i].ReturnValue);
+                        ui::Label *tempLabel = new ui::Label(ui::Point(Size.X/2, currentY), ui::Point(Size.X/2, 16), commands[i].ReturnValue); 
 			tempLabel->Appearance.VerticalAlign = ui::Appearance::AlignMiddle;
 			tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
 			commandList.push_back(tempLabel);
 			AddComponent(tempLabel);
-			tempLabel = new ui::Label(ui::Point(0, currentY), ui::Point(Size.X/2, 16), commands[i].Command);
-			tempLabel->Appearance.VerticalAlign = ui::Appearance::AlignMiddle;
-			tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
-			commandList.push_back(tempLabel);
-			AddComponent(tempLabel);
-			currentY-=16;
+
+                        std::string tmpCommand = commands[i].Command;
+                        while ((tmpCommand.length() * PIXEL_WIDTH) >= Size.X/2) {
+                            currentY-=16;
+                            tempLabel = new ui::Label(ui::Point(0, currentY),
+                                                      ui::Point(Size.X/2, 16),
+                                                      tmpCommand.substr(0, Size.X/2/PIXEL_WIDTH));
+                            tempLabel->Appearance.VerticalAlign = ui::Appearance::AlignMiddle;
+                            tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
+                            commandList.push_back(tempLabel);
+                            AddComponent(tempLabel);
+                            std::cout << tmpCommand.length()  << " " << Size.X/2/PIXEL_WIDTH << std::endl;
+                            tmpCommand = tmpCommand.substr(Size.X/2/PIXEL_WIDTH + 1);
+                            std::cout << tmpCommand << std::endl;
+                            totalY+=16;
+                        }
+
+                        currentY+=totalY;
+                        tempLabel = new ui::Label(ui::Point(0, currentY),
+                                                  ui::Point(Size.X/2, 16),
+                                                  tmpCommand);
+                        tempLabel->Appearance.VerticalAlign = ui::Appearance::AlignMiddle;
+                        tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
+                        commandList.push_back(tempLabel);
+                        AddComponent(tempLabel);
+			currentY-= (totalY + 16);
 		}
 }
 
 void ConsoleView::NotifyCurrentCommandChanged(ConsoleModel * sender)
 {
-	commandField->SetText(sender->GetCurrentCommand().Command);
-	commandField->SetDisplayText(c->FormatCommand(commandField->GetText()));
+    commandField->SetText(sender->GetCurrentCommand().Command);
+    commandField->SetDisplayText(c->FormatCommand(commandField->GetText()));
 }
 
 
