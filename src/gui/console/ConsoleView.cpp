@@ -70,7 +70,9 @@ void ConsoleView::NotifyPreviousCommandsChanged(ConsoleModel * sender)
                     totalY = 0;
 			if(currentY <= 0)
 				break;
-                        ui::Label *tempLabel = new ui::Label(ui::Point(Size.X/2, currentY), ui::Point(Size.X/2, 16), commands[i].ReturnValue); 
+                        ui::Label *tempLabel = new ui::Label(ui::Point(Size.X/2, currentY),
+                                                             ui::Point(Size.X/2, 16),
+                                                             commands[i].ReturnValue); 
 			tempLabel->Appearance.VerticalAlign = ui::Appearance::AlignMiddle;
 			tempLabel->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
 			commandList.push_back(tempLabel);
