@@ -32,9 +32,9 @@ ElementSearchActivity::ElementSearchActivity(GameController * gameController, st
 	altPressed(false),
 	exit(false)
 {
-	ui::Label * title = new ui::Label(ui::Point(4, 5), ui::Point(Size.X-8, 15), "Element Search");
+	ui::Label * title = new ui::Label(ui::Point(4, -35), ui::Point(Size.X-8, 15), "Element Search");
 	title->SetTextColour(style::Colour::InformationTitle);
-	title->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
+	title->Appearance.HorizontalAlign = ui::Appearance::AlignCentre;
 	AddComponent(title);
 
 	class SearchAction : public ui::TextboxAction
@@ -48,11 +48,16 @@ ElementSearchActivity::ElementSearchActivity(GameController * gameController, st
 		}
 	};
 
-	searchField = new ui::Textbox(ui::Point(8, 23), ui::Point(Size.X-16, 17), "");
+	searchField = new ui::Textbox(ui::Point(8, -17), ui::Point(Size.X-16, 17), "");
 	searchField->SetActionCallback(new SearchAction(this));
 	searchField->Appearance.HorizontalAlign = ui::Appearance::AlignLeft;
 	AddComponent(searchField);
 	FocusComponent(searchField);
+
+	ui::Label * searchNote = new ui::Label(ui::Point(4, 8), ui::Point(Size.X-8, 15), "*Use Element Abbreviations when searching.*\n*Full word searching is not implemeted yet.*");
+	searchNote->SetTextColour(style::Colour::InformationTitle);
+	searchNote->Appearance.HorizontalAlign = ui::Appearance::AlignCentre;
+	AddComponent(searchNote);
 
 	class CloseAction: public ui::ButtonAction
 		{
@@ -97,7 +102,7 @@ void ElementSearchActivity::searchTools(std::string query)
 	}
 	toolButtons.clear();
 
-	ui::Point viewPosition = searchField->Position + ui::Point(2+0, searchField->Size.Y+2+8);
+	ui::Point viewPosition = searchField->Position + ui::Point(2+0, searchField->Size.Y+2+8+22);
 	ui::Point current = ui::Point(0, 0);
 
 	std::string queryLower = std::string(query);
@@ -189,10 +194,10 @@ void ElementSearchActivity::SetActiveTool(int selectionState, Tool * tool)
 void ElementSearchActivity::OnDraw()
 {
 	Graphics * g = GetGraphics();
-	g->clearrect(Position.X-2, Position.Y-2, Size.X+3, Size.Y+3);
-	g->drawrect(Position.X, Position.Y, Size.X, Size.Y, 255, 255, 255, 255);
+	g->clearrect(Position.X, Position.Y-40, Size.X+3, Size.Y+43);
+	g->drawrect(Position.X, Position.Y-40, Size.X, Size.Y+40, 255, 255, 255, 255);
 
-	g->drawrect(Position.X+searchField->Position.X, Position.Y+searchField->Position.Y+searchField->Size.Y+8, searchField->Size.X, Size.Y-(searchField->Position.Y+searchField->Size.Y+8)-23, 255, 255, 255, 180);
+	g->drawrect(Position.X+searchField->Position.X, Position.Y+searchField->Position.Y+searchField->Size.Y+8+22, searchField->Size.X, Size.Y-(searchField->Position.Y+searchField->Size.Y+8)-44, 255, 255, 255, 180);
 }
 
 void ElementSearchActivity::OnTick(float dt)
