@@ -123,6 +123,7 @@ wall_type * LoadWalls(int & wallCount)
 		{PIXPACK(0xC0C0C0), PIXPACK(0x101010), 2, Renderer::WallIcon, "LIQUID WALL",	"DEFAULT_WL_LIQD",	"Allows liquids, blocks all other particles. Conductive."},
 		{PIXPACK(0x808080), PIXPACK(0x000000), 1, Renderer::WallIcon, "ABSORB WALL",	"DEFAULT_WL_ABSRB",	"Absorbs particles but lets air currents through."},
 		{PIXPACK(0x808080), PIXPACK(0x000000), 3, Renderer::WallIcon, "WALL",			"DEFAULT_WL_WALL",	"Basic wall, blocks everything."},
+		{PIXPACK(0x0FFF0F), PIXPACK(0x000000), 3, Renderer::WallIcon, "WALL-meow",			"DEFAULT_WL_MEOW",	"Basic meow-wall, blocks everything."},
 		{PIXPACK(0x3C3C3C), PIXPACK(0x000000), 1, Renderer::WallIcon, "AIRONLY WALL",	"DEFAULT_WL_AIR",	"Allows air, but blocks all particles."},
 		{PIXPACK(0x575757), PIXPACK(0x000000), 1, Renderer::WallIcon, "POWDER WALL",	"DEFAULT_WL_POWDR",	"Allows powders, blocks all other particles."},
 		{PIXPACK(0xFFFF22), PIXPACK(0x101010), 2, Renderer::WallIcon, "CONDUCTOR",		"DEFAULT_WL_CNDTR",	"Conductor. Allows all particles to pass through and conducts electricity."},

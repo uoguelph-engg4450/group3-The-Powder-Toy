@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "gui/interface/Window.h"
 #include "Config.h"
 #include "graphics/Graphics.h"
 #if defined(LIN)
@@ -58,7 +59,9 @@ extern "C" {
 
 using namespace std;
 
+#define DEFAULT_CONTROLLER 0
 #define INCLUDE_SYSWM
+#define CURSOR_MOVEMENT 2
 #include "SDLCompat.h"
 #if defined(USE_SDL) && defined(LIN) && defined(SDL_VIDEO_DRIVER_X11)
 SDL_SysWMinfo sdl_wminfo;
@@ -68,10 +71,60 @@ Atom XA_CLIPBOARD, XA_TARGETS, XA_UTF8_STRING;
 std::string clipboardText = "";
 
 int desktopWidth = 1280, desktopHeight = 1024;
+int mousex = 0, mousey = 0;
 
 SDL_Surface * sdl_scrn;
 int scale = 1;
 bool fullscreen = false;
+
+void HandleJoystick(SDL_Joystick* joystick);
+#ifdef TEST
+int y_test = 0;
+int x_test = 0;
+// Note 1
+#include <cppunit/ui/text/TestRunner.h>
+#include "/usr/include/cppunit/TestCase.h"
+#include "/usr/include/cppunit/TestSuite.h"
+#include "/usr/include/cppunit/TestCaller.h"
+#include "/usr/include/cppunit/TestRunner.h"
+
+class test_controller : public CppUnit::TestFixture
+{
+public:
+    static CppUnit::Test *suite() {
+        CppUnit::TestSuite *suite_tests = new CppUnit::TestSuite("test_controller");
+        suite_tests->addTest(new CppUnit::TestCaller<test_controller>("Move Right", &test_controller::test_joystick_right));
+        suite_tests->addTest(new CppUnit::TestCaller<test_controller>("Move Left", &test_controller::test_joystick_left));
+        suite_tests->addTest(new CppUnit::TestCaller<test_controller>("Move Down", &test_controller::test_joystick_down));
+        suite_tests->addTest(new CppUnit::TestCaller<test_controller>("Move Up", &test_controller::test_joystick_up));
+        return suite_tests;
+    }
+    void test_joystick_right() {
+        x_test = 5000;
+        HandleJoystick(NULL);
+        CPPUNIT_ASSERT(mousex == 2);
+    }
+
+    void test_joystick_left() {
+        x_test = -5000;
+        HandleJoystick(NULL);
+        CPPUNIT_ASSERT(mousex == 0);
+    }
+
+    void test_joystick_up() {
+        y_test = 5000;
+        HandleJoystick(NULL);
+        CPPUNIT_ASSERT(mousey == 2);
+    }
+
+    void test_joystick_down() {
+        y_test = -5000;
+        HandleJoystick(NULL);
+        CPPUNIT_ASSERT(mousey == 0);
+    }
+};
+
+#endif
 
 void ClipboardPush(std::string text)
 {
@@ -186,7 +239,6 @@ std::string ClipboardPull()
 	return clipboardText;
 }
 
-int mousex = 0, mousey = 0;
 #ifdef OGLI
 void blit()
 {
@@ -454,11 +506,12 @@ int SDLOpen()
 #if defined(WIN) && defined(WINCONSOLE)
 	FILE * console = fopen("CON", "w" );
 #endif
-	if (SDL_Init(SDL_INIT_VIDEO)<0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)<0)
 	{
 		fprintf(stderr, "Initializing SDL: %s\n", SDL_GetError());
 		return 1;
 	}
+
 	const SDL_VideoInfo * vidInfo = SDL_GetVideoInfo();
 	desktopWidth = vidInfo->current_w;
 	desktopHeight = vidInfo->current_h;
@@ -616,7 +669,7 @@ SDLKey MapNumpad(SDLKey key)
 
 int elapsedTime = 0, currentTime = 0, lastTime = 0, currentFrame = 0;
 unsigned int lastTick = 0;
-float fps = 0, delta = 1.0f, inputScale = 1.0f;
+float fps = 0, delta = 1.0f, inputScale = 1.0f, jinputScale = 2*8192;
 ui::Engine * engine = NULL;
 bool showDoubleScreenDialog = false;
 float currentWidth, currentHeight;
@@ -642,7 +695,7 @@ void EventProcess(SDL_Event event)
 	{
 	case SDL_QUIT:
 		if (engine->GetFastQuit() || engine->CloseWindow())
-			engine->Exit();
+                    engine->Exit();
 		break;
 	case SDL_KEYDOWN:
 		engine->onKeyPress(event.key.keysym.sym, event.key.keysym.unicode, event.key.keysym.mod&KMOD_SHIFT, event.key.keysym.mod&KMOD_CTRL, event.key.keysym.mod&KMOD_ALT);
@@ -655,6 +708,50 @@ void EventProcess(SDL_Event event)
 		mousex = event.motion.x*inputScale;
 		mousey = event.motion.y*inputScale;
 		break;
+	case SDL_JOYBUTTONDOWN:  /* Handle Joystick Button Presses */
+	    if ( event.jbutton.button == 0 ) // for A button , do left mouse click operation
+	    {
+	        engine->onMouseClick(mousex, mousey, SDL_BUTTON_LEFT);
+	    }
+	    if ( event.jbutton.button == 1 ) 
+	    {
+	        engine->onMouseClick(mousex, mousey, SDL_BUTTON_RIGHT);
+	    }
+	    if ( event.jbutton.button == 2 ) 
+	    {
+	        engine->onMouseClick(mousex, mousey, SDL_BUTTON_MIDDLE);
+	    }
+	    if ( event.jbutton.button == 5 ) // Right bumper, scroll in (WHEEL UP)
+	    {
+	        engine->onMouseWheel(mousex, mousey, 1);
+	    }
+	    if ( event.jbutton.button == 4 ) // left bumper, scroll out
+	    {
+	        engine->onMouseWheel(mousex, mousey, -1);
+	    }
+	    break;
+	case SDL_JOYBUTTONUP:  /* Handle Joystick Button Presses */
+	    if ( event.jbutton.button == 0 ) // for A button , do left mouse click operation
+	    {
+	        engine->onMouseUnclick(mousex, mousey, SDL_BUTTON_LEFT);
+	    }
+	    if ( event.jbutton.button == 1 ) 
+	    {
+	        engine->onMouseUnclick(mousex, mousey, SDL_BUTTON_RIGHT);
+	    }
+	    if ( event.jbutton.button == 2 )
+	    {
+	        engine->onMouseUnclick(mousex, mousey, SDL_BUTTON_MIDDLE);
+	    }
+	    if ( event.jbutton.button == 5 ) // Right bumper, scroll in (WHEEL UP)
+	    {
+	        engine->onMouseWheel(mousex, mousey, 1);
+	    }
+	    if ( event.jbutton.button == 4 ) // left bumper, scroll out
+	    {
+	        engine->onMouseWheel(mousex, mousey, -1);
+	    }
+	    break;
 	case SDL_MOUSEBUTTONDOWN:
 		if (event.button.button == SDL_BUTTON_WHEELUP)
 		{
@@ -760,20 +857,66 @@ void DoubleScreenDialog()
 #endif
 	}
 }
+void HandleJoystick(SDL_Joystick* joystick) {
+        int x_move, y_move;
+#ifndef TEST
+        x_move = SDL_JoystickGetAxis(joystick, 0);
+        y_move = SDL_JoystickGetAxis(joystick, 1);
+#else
+        x_move = x_test;
+        y_move = y_test;
+#endif
+        if( (x_move > 3200) && (mousex < WINDOWW) )
+        {
+            mousex += CURSOR_MOVEMENT;
+        }
+
+        if( (x_move < -3200) && (mousex > 0) )
+        {
+            mousex -= CURSOR_MOVEMENT;
+        }
+
+        if( (y_move > 3200) && (mousey < WINDOWH) )
+        {
+            mousey += CURSOR_MOVEMENT;
+        }
+
+        if( (y_move < -3200) && (mousey > 0) )
+        {
+            mousey -= CURSOR_MOVEMENT;
+        }
+        engine->onMouseMove(mousex, mousey);
+}
 
 void EngineProcess()
 {
-	double frameTimeAvg = 0.0f, correctedFrameTimeAvg = 0.0f;
-	SDL_Event event;
+#ifdef TEST
+    CppUnit::TextUi::TestRunner runner;
+    //runner.addTest(ExampleTestCase::suite());
+    runner.addTest(test_controller::suite());
+    runner.run();
+#endif
+        double frameTimeAvg = 0.0f, correctedFrameTimeAvg = 0.0f;
+/* init the joystick, here we are assuming its 0 */
+        SDL_Joystick *joystick;
+        SDL_JoystickEventState(SDL_ENABLE);
+        joystick = SDL_JoystickOpen(DEFAULT_CONTROLLER);
+        SDL_Event event;
+        #ifdef TEST
+        /* our shit*/
+        #endif
 	while(engine->Running())
 	{
 		int frameStart = SDL_GetTicks();
 		if(engine->Broken()) { engine->UnBreak(); break; }
-		event.type = 0;
-		while (SDL_PollEvent(&event))
+                if (SDL_JoystickOpened(DEFAULT_CONTROLLER)) {
+                    HandleJoystick(joystick);
+                }
+                event.type = 0;
+                while (SDL_PollEvent(&event))
 		{
-			EventProcess(event);
-			event.type = 0; //Clear last event
+                        EventProcess(event);
+                        event.type = 0; //Clear last event
 		}
 		if(engine->Broken()) { engine->UnBreak(); break; }
 
@@ -819,6 +962,7 @@ void EngineProcess()
 			DoubleScreenDialog();
 		}
 	}
+        SDL_JoystickClose(DEFAULT_CONTROLLER);
 #ifdef DEBUG
 	std::cout << "Breaking out of EngineProcess" << std::endl;
 #endif

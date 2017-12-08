@@ -62,6 +62,7 @@ AddSconsOption('native', False, False, "Enable optimizations specific to your cp
 AddSconsOption('release', True, False, "Enable loop / compiling optimizations (default).")
 
 AddSconsOption('debugging', False, False, "Compile with debug symbols.")
+AddSconsOption('test', False, False, "Compile with debug symbols.")
 AddSconsOption('symbols', False, False, "Preserve (don't strip) symbols")
 AddSconsOption('static', False, False, "Compile statically.")
 AddSconsOption('opengl', False, False, "Build with OpenGL interface support.")
@@ -179,6 +180,8 @@ if GetOption("msvc"):
 		env.Append(LIBPATH=['StaticLibs/'])
 	else:
 		env.Append(LIBPATH=['Libraries/'])
+		env.Append(LIBPATH=['/usr/lib/'])
+		env.Append(LIBPATH=['/usr/lib/'])
 	env.Append(CPPPATH=['includes/'])
 
 #Check 32/64 bit
@@ -265,6 +268,14 @@ def findLibs(env, conf):
 			env.Append(CPPDEFINES=["SDL_INC"])
 		else:
 			FatalError("SDL.h not found")
+
+	if ('test') and not conf.CheckCXXHeader('TestCase.h'):
+		if conf.CheckCXXHeader('cppunit/TestCase.h'):
+			env.Append(CPPDEFINES=["MEOW"])
+		else:
+			FatalError("TestCase.h not found")
+                if not conf.CheckLib(['CppUnit::TestCase::~TestCase', 'cppunit']):
+                        FatalError("pthreads development library not found or not installed")
 
 	if not GetOption('nolua') and not GetOption('renderer'):
 		#Look for Lua
@@ -393,7 +404,7 @@ if not msvc:
 	if platform == "Windows":
 		env.Append(CXXFLAGS=['-std=gnu++98'])
 	else:
-		env.Append(CXXFLAGS=['-std=c++98'])
+		env.Append(CXXFLAGS=['-std=c++11'])
 	env.Append(CXXFLAGS=['-Wno-invalid-offsetof'])
 	if platform == "Linux":
 		env.Append(CXXFLAGS=['-Wno-unused-result'])
@@ -491,6 +502,8 @@ if GetOption('opengl') or GetOption('opengl-renderer'):
 	if GetOption('opengl-renderer'):
 		env.Append(CPPDEFINES=['OGLR'])
 
+if GetOption('test'):
+	env.Append(CPPDEFINES=['TEST'])
 if GetOption('renderer'):
 	env.Append(CPPDEFINES=['RENDERER'])
 else:
